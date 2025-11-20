@@ -82,5 +82,5 @@ Todos los programas requieren las siguientes librerías:
 
 ```txt
 matplotlib >= 3.5.0
-numpy > =1.21.0
+numpy >= 1.21.0
 scipy > 1.7.0
