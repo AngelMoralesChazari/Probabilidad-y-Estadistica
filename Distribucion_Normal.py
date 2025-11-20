@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 import numpy as np
 from scipy.stats import norm
 
@@ -10,138 +12,137 @@ class AplicacionDistribucionNormal:
         self.raiz = raiz
         self.raiz.title("Distribución Normal - Campana de Gauss")
         
-        # Obtener dimensiones de la pantalla
         ancho_pantalla = self.raiz.winfo_screenwidth()
         alto_pantalla = self.raiz.winfo_screenheight()
         
-        # Configurar ventana maximizada (más confiable que fullscreen)
-        self.raiz.state('zoomed')  # Maximizada
-        # O usar tamaño personalizado casi completo:
-        # self.raiz.geometry(f"{ancho_pantalla-100}x{alto_pantalla-100}+50+50")
+        self.raiz.state('zoomed')
         
-        # Configurar fuentes MÁS GRANDES
+        # Fuentes 
         self.fuente_grande = ('Arial', 12)
         self.fuente_mediana = ('Arial', 10)
         self.fuente_titulo = ('Arial', 14, 'bold')
         self.fuente_botones = ('Arial', 10)
         
         # Variables para los parámetros
-        self.media = tk.DoubleVar(value=0)
-        self.desviacion = tk.DoubleVar(value=1)
-        self.probabilidad = tk.DoubleVar(value=0.95)
-        self.limite_inferior = tk.DoubleVar(value=-1)
-        self.limite_superior = tk.DoubleVar(value=1)
+        self.media = tk.DoubleVar(value = 0)
+        self.desviacion = tk.DoubleVar(value = 1)
+        self.probabilidad = tk.DoubleVar(value = 0.95)
+        self.limite_inferior = tk.DoubleVar(value = -1)
+        self.limite_superior = tk.DoubleVar(value = 1)
         
         self.crear_interfaz()
         self.actualizar_grafica()
         
-        # Botón para salir de pantalla completa
+        # Botón para salir
         self.raiz.bind('<Escape>', lambda e: self.raiz.state('normal'))
         self.raiz.bind('<F11>', lambda e: self.raiz.state('zoomed'))
     
     def crear_interfaz(self):
-        # Configurar estilo para fuentes MÁS GRANDES
         estilo = ttk.Style()
-        estilo.configure('TLabel', font=self.fuente_mediana)
-        estilo.configure('TButton', font=self.fuente_botones)
-        estilo.configure('TLabelframe', font=self.fuente_titulo)
-        estilo.configure('TLabelframe.Label', font=self.fuente_titulo)
-        estilo.configure('TEntry', font=self.fuente_mediana)
+        estilo.configure('TLabel', font = self.fuente_mediana)
+        estilo.configure('TButton', font = self.fuente_botones)
+        estilo.configure('TLabelframe', font = self.fuente_titulo)
+        estilo.configure('TLabelframe.Label', font = self.fuente_titulo)
+        estilo.configure('TEntry', font = self.fuente_mediana)
         
-        # Marco principal con más padding
+        # Marco principal 
         marco_principal = ttk.Frame(self.raiz, padding="10")
-        marco_principal.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        marco_principal.pack(fill = tk.BOTH, expand = True, padx = 10, pady = 10)
         
-        # Marco de controles - MÁS GRANDE
-        marco_controles = ttk.LabelFrame(marco_principal, text="PARÁMETROS DE LA DISTRIBUCIÓN", padding="10")
-        marco_controles.pack(fill=tk.X, pady=(0, 15))
+        # Marco de controles 
+        marco_controles = ttk.LabelFrame(marco_principal, text = "PARÁMETROS DE LA DISTRIBUCIÓN", padding = "10")
+        marco_controles.pack(fill = tk.X, pady = (0, 15))
         
-        # Controles para media - FILA 1
+        # PARAMETROS DE DISTRIBUCION - Media
         frame_media = ttk.Frame(marco_controles)
-        frame_media.pack(fill=tk.X, pady=8)
+        frame_media.pack(fill = tk.X, pady = 8)
         
-        ttk.Label(frame_media, text="Media (μ):", font=self.fuente_mediana).pack(side=tk.LEFT, padx=(0, 15))
-        self.deslizador_media = ttk.Scale(frame_media, from_=-5, to=5, variable=self.media, 
-                                         orient=tk.HORIZONTAL, command=self.actualizar_desde_deslizador,
-                                         length=400)  # Deslizador más largo
-        self.deslizador_media.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 15))
-        self.entrada_media = ttk.Entry(frame_media, textvariable=self.media, width=12, font=self.fuente_mediana)
-        self.entrada_media.pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(frame_media, text = "Media (μ):", font = self.fuente_mediana).pack(side = tk.LEFT, padx = (0, 15))
+        self.deslizador_media = ttk.Scale(frame_media, from_ = -5, to = 5, variable = self.media, 
+                                         orient = tk.HORIZONTAL, command = self.actualizar_desde_deslizador,
+                                         length = 400)  
         
-        # Controles para desviación estándar - FILA 2
+        self.deslizador_media.bind('<Button-1>', lambda e: self.click_en_deslizador(e, self.deslizador_media, -5, 5))
+
+        self.deslizador_media.pack(side = tk.LEFT, fill = tk.X, expand = True, padx = (0, 15))
+        self.entrada_media = ttk.Entry(frame_media, textvariable = self.media, width = 12, font = self.fuente_mediana)
+        self.entrada_media.pack(side = tk.LEFT, padx = (0, 10))
+        
+        # PARAMETROS DE DISTRIBUCION - Desviación Estándar 
         frame_desviacion = ttk.Frame(marco_controles)
-        frame_desviacion.pack(fill=tk.X, pady=8)
+        frame_desviacion.pack(fill = tk.X, pady = 8)
         
-        ttk.Label(frame_desviacion, text="Desviación Estándar (σ):", font=self.fuente_mediana).pack(side=tk.LEFT, padx=(0, 15))
-        self.deslizador_desviacion = ttk.Scale(frame_desviacion, from_=0.1, to=3, variable=self.desviacion, 
-                                              orient=tk.HORIZONTAL, command=self.actualizar_desde_deslizador,
-                                              length=400)
-        self.deslizador_desviacion.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 15))
-        self.entrada_desviacion = ttk.Entry(frame_desviacion, textvariable=self.desviacion, width=12, font=self.fuente_mediana)
-        self.entrada_desviacion.pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(frame_desviacion, text = "Desviación Estándar (σ):", font = self.fuente_mediana).pack(side = tk.LEFT, padx  = (0, 15))
+        self.deslizador_desviacion = ttk.Scale(frame_desviacion, from_ = 0.1, to = 3, variable = self.desviacion, 
+                                              orient = tk.HORIZONTAL, command = self.actualizar_desde_deslizador,
+                                              length = 400)
         
-        # Marco para cálculos de probabilidad - MÁS GRANDE
-        marco_probabilidad = ttk.LabelFrame(marco_principal, text="CÁLCULOS DE PROBABILIDAD", padding="10")
-        marco_probabilidad.pack(fill=tk.X, pady=(0, 15))
+        self.deslizador_desviacion.pack(side = tk.LEFT, fill = tk.X, expand = True, padx = (0, 15))
+        self.entrada_desviacion = ttk.Entry(frame_desviacion, textvariable = self.desviacion, width = 12, font = self.fuente_mediana)
+        self.entrada_desviacion.pack(side = tk.LEFT, padx = (0, 10))
         
-        # Probabilidad entre dos valores - FILA 1
+        # Marco para cálculos de probabilidad 
+        marco_probabilidad = ttk.LabelFrame(marco_principal, text = "CÁLCULOS DE PROBABILIDAD", padding = "10")
+        marco_probabilidad.pack(fill = tk.X, pady = (0, 15))
+        
+        # CÁLCULOS DE PROBABILIDAD - Fila 1
         frame_rango = ttk.Frame(marco_probabilidad)
-        frame_rango.pack(fill=tk.X, pady=10)
+        frame_rango.pack(fill = tk.X, pady = 10)
         
-        ttk.Label(frame_rango, text="Límite Inferior:", font=self.fuente_mediana).pack(side=tk.LEFT, padx=(0, 10))
-        self.entrada_lim_inf = ttk.Entry(frame_rango, textvariable=self.limite_inferior, width=12, font=self.fuente_mediana)
-        self.entrada_lim_inf.pack(side=tk.LEFT, padx=(0, 30))
+        ttk.Label(frame_rango, text = "Límite Inferior:", font = self.fuente_mediana).pack(side = tk.LEFT, padx = (0, 10))
+        self.entrada_lim_inf = ttk.Entry(frame_rango, textvariable = self.limite_inferior, width = 12, font = self.fuente_mediana)
+        self.entrada_lim_inf.pack(side = tk.LEFT, padx = (0, 30))
         
-        ttk.Label(frame_rango, text="Límite Superior:", font=self.fuente_mediana).pack(side=tk.LEFT, padx=(0, 10))
-        self.entrada_lim_sup = ttk.Entry(frame_rango, textvariable=self.limite_superior, width=12, font=self.fuente_mediana)
-        self.entrada_lim_sup.pack(side=tk.LEFT, padx=(0, 30))
+        ttk.Label(frame_rango, text = "Límite Superior:", font = self.fuente_mediana).pack(side = tk.LEFT, padx = (0, 10))
+        self.entrada_lim_sup = ttk.Entry(frame_rango, textvariable = self.limite_superior, width = 12, font = self.fuente_mediana)
+        self.entrada_lim_sup.pack(side = tk.LEFT, padx = (0, 30))
         
-        ttk.Button(frame_rango, text="CALCULAR PROBABILIDAD", 
-                  command=self.calcular_probabilidad_rango, 
-                  style='TButton').pack(side=tk.LEFT, padx=(20, 0))
+        ttk.Button(frame_rango, text = "CALCULAR PROBABILIDAD", 
+                  command = self.calcular_probabilidad_rango, 
+                  style = 'TButton').pack(side = tk.LEFT, padx = (20, 0))
         
-        # Probabilidad acumulada - FILA 2
+        # PROBABILDIAD ACUMULADA - FILA 2
         frame_acumulada = ttk.Frame(marco_probabilidad)
-        frame_acumulada.pack(fill=tk.X, pady=10)
+        frame_acumulada.pack(fill = tk.X, pady = 10)
         
-        ttk.Label(frame_acumulada, text="Valor Z:", font=self.fuente_mediana).pack(side=tk.LEFT, padx=(0, 10))
-        self.valor_z = ttk.Entry(frame_acumulada, width=12, font=self.fuente_mediana)
-        self.valor_z.pack(side=tk.LEFT, padx=(0, 30))
+        ttk.Label(frame_acumulada, text = "Valor Z:", font = self.fuente_mediana).pack(side = tk.LEFT, padx = (0, 10))
+        self.valor_z = ttk.Entry(frame_acumulada, width = 12, font = self.fuente_mediana)
+        self.valor_z.pack(side = tk.LEFT, padx = (0, 30))
         
-        ttk.Button(frame_acumulada, text="PROBABILIDAD ACUMULADA (P(X ≤ z))", 
-                  command=self.calcular_probabilidad_acumulada, 
-                  style='TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(frame_acumulada, text = "PROBABILIDAD ACUMULADA (P(X ≤ z))", 
+                  command = self.calcular_probabilidad_acumulada, 
+                  style = 'TButton').pack(side = tk.LEFT, padx = (0, 10))
         
         # Botones de acciones rápidas - MÁS GRANDES
         marco_acciones = ttk.Frame(marco_principal)
-        marco_acciones.pack(fill=tk.X, pady=(0, 15))
+        marco_acciones.pack(fill = tk.X, pady = (0, 15))
         
         # Frame para botones de la izquierda
         frame_botones_izq = ttk.Frame(marco_acciones)
-        frame_botones_izq.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        frame_botones_izq.pack(side = tk.LEFT, fill = tk.X, expand = True)
         
-        ttk.Button(frame_botones_izq, text="DISTRIBUCIÓN ESTÁNDAR (μ=0, σ=1)", 
-                  command=self.establecer_estandar, 
-                  style='TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(frame_botones_izq, text = "DISTRIBUCIÓN ESTÁNDAR (μ=0, σ=1)", 
+                  command = self.establecer_estandar, 
+                  style ='TButton').pack(side = tk.LEFT, padx = (0, 10))
         
-        ttk.Button(frame_botones_izq, text="ÁREA 1 DESVIACIÓN ESTÁNDAR", 
-                  command=self.area_una_desviacion, 
-                  style='TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(frame_botones_izq, text = "ÁREA 1 DESVIACIÓN ESTÁNDAR", 
+                  command = self.area_una_desviacion, 
+                style = 'TButton').pack(side = tk.LEFT, padx = (0, 10))
 
-        ttk.Button(frame_botones_izq, text="ÁREA 2 DESVIACIONES ESTÁNDAR", 
-                  command=self.area_dos_desviaciones, 
-                  style='TButton').pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Button(frame_botones_izq, text = "ÁREA 2 DESVIACIONES ESTÁNDAR", 
+                  command = self.area_dos_desviaciones, 
+                  style = 'TButton').pack(side = tk.LEFT, padx = (0, 10))
         
         # Botón para salir a la derecha
-        ttk.Button(marco_acciones, text="SALIR (ESC)", 
-                  command=self.raiz.destroy, 
-                  style='TButton').pack(side=tk.RIGHT)
+        ttk.Button(marco_acciones, text = "SALIR (ESC)", 
+                  command = self.raiz.destroy, 
+                  style = 'TButton').pack(side = tk.RIGHT)
         
-        # Marco para la gráfica - MÁS GRANDE
+        # Marco para la gráfica
         marco_grafica = ttk.Frame(marco_principal)
-        marco_grafica.pack(fill=tk.BOTH, expand=True)
+        marco_grafica.pack(fill = tk.BOTH, expand = True)
         
-        # Configurar matplotlib con fuentes MÁS GRANDES
+        # Configurar matplotlib
         plt.rcParams.update({
             'font.size': 12,           # Aumentado
             'axes.titlesize': 14,      # Aumentado
@@ -152,19 +153,19 @@ class AplicacionDistribucionNormal:
             'figure.titlesize': 14     # Añadido
         })
         
-        # Crear figura MÁS GRANDE
-        self.figura = plt.Figure(figsize=(12, 6), dpi=100)  # Más grande
+        # Crear figura y ejes
+        self.figura = plt.Figure(figsize = (12, 6), dpi = 100)
         self.eje = self.figura.add_subplot(111)
-        self.figura.patch.set_facecolor('#f0f0f0')  # Fondo gris claro
+        self.figura.patch.set_facecolor('#f0f0f0')
         
         self.canvas = FigureCanvasTkAgg(self.figura, marco_grafica)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        self.canvas.get_tk_widget().pack(fill = tk.BOTH, expand = True, padx = 5, pady = 5)
         
-        # Configurar eventos para actualización en tiempo real
+        # Actualización en tiempo real
         self.configurar_eventos_entrada()
     
     def configurar_eventos_entrada(self):
-        """Configurar eventos para las entradas de texto"""
+        """Eventos para las entradas de texto"""
         entradas = [
             (self.entrada_media, self.media),
             (self.entrada_desviacion, self.desviacion),
@@ -173,7 +174,7 @@ class AplicacionDistribucionNormal:
         ]
         
         for entrada, variable in entradas:
-            entrada.bind('<KeyRelease>', lambda e, v=variable: self.actualizar_desde_entrada(v))
+            entrada.bind('<KeyRelease>', lambda e, v = variable: self.actualizar_desde_entrada(v))
     
     def actualizar_desde_deslizador(self, event=None):
         """Actualizar la gráfica cuando se mueven los deslizadores"""
@@ -187,6 +188,7 @@ class AplicacionDistribucionNormal:
             if hasattr(self, '_after_id'):
                 self.raiz.after_cancel(self._after_id)
             self._after_id = self.raiz.after(500, self.actualizar_grafica)
+        
         except ValueError:
             pass  # Ignorar valores no numéricos
     
@@ -199,11 +201,11 @@ class AplicacionDistribucionNormal:
             desviacion = self.desviacion.get()
             
             # Generar puntos para la curva
-            x = np.linspace(media - 4*desviacion, media + 4*desviacion, 1000)
+            x = np.linspace(media - 4 * desviacion, media + 4 * desviacion, 1000)
             y = norm.pdf(x, media, desviacion)
             
-            # Dibujar la curva principal MÁS GRUESA
-            self.eje.plot(x, y, 'b-', linewidth=3, label=f'N(μ={media:.2f}, σ={desviacion:.2f})')
+            # Dibujar la curva principal 
+            self.eje.plot(x, y, 'b-', linewidth = 3, label = f'N(μ = {media:.2f}, σ = {desviacion:.2f})')
             
             # Sombrear el área entre los límites
             limite_inf = self.limite_inferior.get()
@@ -211,29 +213,29 @@ class AplicacionDistribucionNormal:
             
             if limite_inf < limite_sup:
                 mascara = (x >= limite_inf) & (x <= limite_sup)
-                self.eje.fill_between(x[mascara], y[mascara], alpha=0.4, color='red', 
-                                    label=f'Área: {limite_inf:.2f} a {limite_sup:.2f}')
+                self.eje.fill_between(x[mascara], y[mascara], alpha = 0.4, color = 'red', 
+                                    label = f'Área: {limite_inf:.2f} a {limite_sup:.2f}')
                 
                 # Calcular y mostrar el área sombreada
                 prob = norm.cdf(limite_sup, media, desviacion) - norm.cdf(limite_inf, media, desviacion)
                 self.eje.text(0.02, 0.83, f'P = {prob:.4f}\n({prob*100:.2f}%)', 
-                            transform=self.eje.transAxes, fontsize=12, 
-                            bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.7))
+                            transform = self.eje.transAxes, fontsize = 12, 
+                            bbox = dict(boxstyle = "round,pad=0.3", facecolor = "yellow", alpha=0.7))
             
-            # Configurar la gráfica con mejoras visuales
-            self.eje.set_xlabel('Valores', fontsize=10, fontweight='bold')
-            self.eje.set_ylabel('Densidad de Probabilidad', fontsize=14, fontweight='bold')
+            # Gráfica con mejoras visuales
+            self.eje.set_xlabel('Valores', fontsize = 10, fontweight = 'bold')
+            self.eje.set_ylabel('Densidad de Probabilidad', fontsize = 14, fontweight = 'bold')
             self.eje.set_title('DISTRIBUCIÓN NORMAL - CAMPANA DE GAUSS', 
-                             fontsize=12, fontweight='bold', pad=20)
+                             fontsize = 12, fontweight = 'bold', pad = 20)
             
-            # Mejorar la leyenda
-            self.eje.legend(fontsize=12, loc='upper right', framealpha=0.9)
+            # Leyenda
+            self.eje.legend(fontsize = 12, loc = 'upper right', framealpha = 0.9)
             
-            # Mejorar la grid
-            self.eje.grid(True, alpha=0.3, linestyle='--')
+            # Grid
+            self.eje.grid(True, alpha = 0.3, linestyle = '--')
             
             # Ajustar límites del eje Y para mejor visualización
-            self.eje.set_ylim(bottom=0)
+            self.eje.set_ylim(bottom = 0)
             
             # Redibujar el canvas
             self.canvas.draw()
@@ -278,7 +280,7 @@ class AplicacionDistribucionNormal:
                               f"({prob*100:.4f}% de los valores son ≤ {z:.4f})")
             
             # Actualizar límites para mostrar esta área
-            self.limite_inferior.set(media - 4*desviacion)
+            self.limite_inferior.set(media - 4 * desviacion)
             self.limite_superior.set(z)
             self.actualizar_grafica()
             
@@ -312,15 +314,15 @@ class AplicacionDistribucionNormal:
         """Mostrar el área dentro de dos desviaciones estándar"""
         media = self.media.get()
         desviacion = self.desviacion.get()
-        self.limite_inferior.set(media - 2*desviacion)
-        self.limite_superior.set(media + 2*desviacion)
+        self.limite_inferior.set(media - 2 * desviacion)
+        self.limite_superior.set(media + 2 * desviacion)
         self.actualizar_grafica()
         
-        prob = norm.cdf(media + 2*desviacion, media, desviacion) - norm.cdf(media - 2*desviacion, media, desviacion)
+        prob = norm.cdf(media + 2 * desviacion, media, desviacion) - norm.cdf(media - 2 * desviacion, media, desviacion)
         messagebox.showinfo("Regla Empírica", 
                           f"Área dentro de μ±2σ: {prob:.6f}\n"
                           f"Aproximadamente 95.45% de los datos\n"
-                          f"Límites: [{media-2*desviacion:.2f}, {media+2*desviacion:.2f}]")
+                          f"Límites: [{media - 2 * desviacion:.2f}, {media + 2 * desviacion:.2f}]")
 
 def main():
     raiz = tk.Tk()
