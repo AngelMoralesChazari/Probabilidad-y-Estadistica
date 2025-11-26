@@ -44,6 +44,14 @@ Una colección completa de aplicaciones interactivas en Python diseñadas para v
 
 ## 🚀 Proyectos Actualmente Disponibles
 
+### Técnicas Para El Conteo de Eventos
+**`Factorial De Un Número.py`**
+**`Principio Fundamental Del Conteo.py`**
+**`Conteo De Ordenaciones De Eventos.py`**
+**`Conteo De Permutaciones De Eventos.py`**
+**`Conteo De Combinaciones De Eventos.py`**
+**`Diagramas De Venn.py`**
+
 ### Distribución Normal - Campana de Gauss
 **`distribucion_normal.py`**
 
