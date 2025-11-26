@@ -269,15 +269,22 @@ class AplicacionDistribucionNormal:
     def calcular_probabilidad_acumulada(self):
         """Calcular la probabilidad acumulada hasta un valor Z"""
         try:
-            z = float(self.valor_z.get())
+            valor_z_texto = self.valor_z.get().strip()
+            
+            # Validar que no esté vacío
+            if not valor_z_texto:
+                messagebox.showerror("Error", "Por favor ingrese un valor Z")
+                return
+            
+            z = float(valor_z_texto)
             media = self.media.get()
             desviacion = self.desviacion.get()
             
             prob = norm.cdf(z, media, desviacion)
             
             messagebox.showinfo("Resultado", 
-                              f"P(X ≤ {z:.4f}) = {prob:.6f}\n"
-                              f"({prob*100:.4f}% de los valores son ≤ {z:.4f})")
+                f"P(X ≤ {z:.4f}) = {prob:.6f}\n"
+                f"({prob*100:.4f}% de los valores son ≤ {z:.4f})")
             
             # Actualizar límites para mostrar esta área
             self.limite_inferior.set(media - 4 * desviacion)
