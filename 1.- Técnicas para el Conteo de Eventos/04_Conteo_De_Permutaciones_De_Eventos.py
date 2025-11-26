@@ -166,24 +166,25 @@ class PermutacionesRepeticionApp:
 
         info_text = (
             "ℹ️ Permutaciones con repetición:\n"
-            "Si tenemos un total de n elementos, donde:\n"
-            "  - n₁ son iguales de un tipo,\n"
-            "  - n₂ son iguales de otro tipo,\n"
-            "  - ..., hasta nᵣ,\n"
-            "entonces el número de permutaciones distintas es:\n"
-            "  n! / (n₁! · n₂! · ... · nᵣ!)\n"
-            "Ejemplo: BANANA → 6 letras en total (3 A, 2 N, 1 B)\n"
-            "  Permutaciones = 6! / (3! · 2! · 1!)"
+            "Si tenemos un total de n elementos, donde "
+            "n₁ son iguales de un tipo, n₂ son iguales de otro tipo, "
+            "..., hasta nᵣ, entonces el número de permutaciones distintas es:\n"
+            "n! / (n₁! · n₂! · ... · nᵣ!)\n"
+            "Ejemplo: BANANA → 6 letras en total (3 A, 2 N, 1 B). "
+            "Permutaciones = 6! / (3! · 2! · 1!)"
         )
 
-        tk.Label(
+        info_label = tk.Label(
             info_frame,
             text=info_text,
             font=("Arial", 9),
             bg="#e8f4f8",
             fg="#34495e",
-            justify="left"
-        ).pack(padx=10, pady=8)
+            justify="left",
+            anchor="w",       # alinea el texto a la izquierda dentro del label
+            wraplength=850    # ancho máximo en píxeles para hacer saltos de línea
+        )
+        info_label.pack(fill="x", padx=10, pady=8)
 
     def cargar_ejemplo(self):
         self.entry_palabra.delete(0, tk.END)
