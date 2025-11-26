@@ -144,13 +144,13 @@ class AplicacionDistribucionNormal:
         
         # Configurar matplotlib
         plt.rcParams.update({
-            'font.size': 12,           # Aumentado
-            'axes.titlesize': 14,      # Aumentado
-            'axes.labelsize': 12,      # Aumentado
-            'legend.fontsize': 10,     # Aumentado
-            'xtick.labelsize': 10,     # Aumentado
-            'ytick.labelsize': 10,     # Aumentado
-            'figure.titlesize': 14     # Añadido
+            'font.size': 12,           
+            'axes.titlesize': 14,      
+            'axes.labelsize': 12,      
+            'legend.fontsize': 10,     
+            'xtick.labelsize': 10,     
+            'ytick.labelsize': 10,     
+            'figure.titlesize': 14     
         })
         
         # Crear figura y ejes
