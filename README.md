@@ -7,7 +7,7 @@
 
 Les presento una colección completa de aplicaciones interactivas diseñadas para visualizar y comprender conceptos fundamentales de probabilidad y estadística. Cada herramienta cuenta con una interfaz gráfica intuitiva que permite explorar los conceptos en tiempo real y facilitar el aprendizaje de la materia.
 
-Este conjunto de programas se distribuye como software libre, por lo que cualquier persona puede usar, copiar, modificar y mejorar el código sin restricciones, con la unica condicion de que se haga referencia a este repositorio.
+Este conjunto de programas se distribuye como software libre, de modo que cualquier persona puede usar, copiar, modificar y mejorar el código. La única condición es mantener la atribución correspondiente a este repositorio en cualquier redistribución o derivado.
 
 Siéntanse en plena libertad de adaptarlos a sus proyectos, ampliarlos o utilizarlos como base para nuevas herramientas educativas.
 
