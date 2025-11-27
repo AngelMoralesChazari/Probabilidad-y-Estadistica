@@ -179,6 +179,20 @@ class AplicacionDistribucionNormal:
             command=self.calcular_probabilidad_entre_z
         ).pack(side=tk.LEFT, padx=(10, 0))
 
+        # Sección para calcular valor crítico superior
+        frame_percentil = ttk.Frame(marco_probabilidad)
+        frame_percentil.pack(fill=tk.X, pady=10)
+
+        ttk.Label(frame_percentil, text="Percentil cola superior (ej. 0.20):").pack(side=tk.LEFT, padx=(0, 10))
+        self.entrada_percentil = ttk.Entry(frame_percentil, width=12, font=self.fuente_mediana)
+        self.entrada_percentil.pack(side=tk.LEFT, padx=(0, 30))
+
+        ttk.Button(
+            frame_percentil,
+            text="CALCULAR VALOR CRÍTICO Z Y X",
+            command=self.calcular_valor_critico
+        ).pack(side=tk.LEFT, padx=(0, 10))
+
         # Botones de acciones rápidas
         marco_acciones = ttk.Frame(marco_principal)
         marco_acciones.pack(fill=tk.X, pady=(0, 15))
@@ -257,6 +271,7 @@ class AplicacionDistribucionNormal:
             (self.entrada_lim_sup, self.limite_superior),
             (self.entrada_z1, self.z1),
             (self.entrada_z2, self.z2),
+            (self.entrada_percentil, None),
         ]
         for entrada, variable in entradas:
             entrada.bind('<KeyRelease>', lambda e, v=variable: self.actualizar_desde_entrada(v))
@@ -471,6 +486,41 @@ class AplicacionDistribucionNormal:
 
         except ValueError:
             messagebox.showerror("Error", "Por favor ingrese valores numéricos válidos para z₁ y z₂")
+
+    def calcular_valor_critico(self):
+        texto = self.entrada_percentil.get().strip()
+        if not texto:
+            messagebox.showerror("Error", "Por favor ingrese un valor de percentil")
+            return
+        try:
+            percentil = float(texto)
+            if percentil <= 0 or percentil >= 1:
+                raise ValueError("El percentil debe estar entre 0 y 1")
+        except ValueError as e:
+            messagebox.showerror("Error", f"Ingrese un número válido para el percentil (entre 0 y 1)\n{e}")
+            return
+
+        media = self.safe_get(self.media)
+        desviacion = self.safe_get(self.desviacion)
+        if None in (media, desviacion) or desviacion <= 0:
+            messagebox.showerror("Error", "Ingrese μ y σ válidos")
+            return
+
+        # Calcular z crítico para la cola superior
+        z_critico = norm.ppf(1 - percentil)
+        
+        # Calcular x usando la fórmula inversa
+        x_critico = z_critico * desviacion + media
+
+        texto_res = (
+            f"Percentil: {percentil:.4f} (cola superior)\n"
+            f"z crítico (valor estándar): {z_critico:.4f}\n"
+            f"x crítico (valor original): {x_critico:.4f}\n\n"
+            f"Fórmulas utilizadas:\n"
+            f"z = Φ⁻¹(1 - p) = Φ⁻¹({1-percentil:.4f}) = {z_critico:.4f}\n"
+            f"x = z × σ + μ = {z_critico:.4f} × {desviacion:.4f} + {media:.4f} = {x_critico:.4f}"
+        )
+        messagebox.showinfo("Valor Crítico Superior", texto_res)
 
     # ---------- Acciones rápidas ----------
     def establecer_estandar(self):
