@@ -5,7 +5,11 @@
 [![Matplotlib](https://img.shields.io/badge/Plotting-Matplotlib-orange.svg)](https://matplotlib.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Una colección completa de aplicaciones interactivas en Python diseñadas para visualizar y comprender conceptos fundamentales de probabilidad y estadística. Cada programa incluye interfaz gráfica intuitiva para experimentar con los conceptos en tiempo real.
+Les presento una colección completa de aplicaciones interactivas diseñadas para visualizar y comprender conceptos fundamentales de probabilidad y estadística. Cada herramienta cuenta con una interfaz gráfica intuitiva que permite explorar los conceptos en tiempo real y facilitar el aprendizaje de la materia.
+
+Este conjunto de programas se distribuye como software libre, por lo que cualquier persona puede usar, copiar, modificar y mejorar el código sin restricciones, con la unica condicion de que se haga referencia a este repositorio.
+
+Siéntanse en plena libertad de adaptarlos a sus proyectos, ampliarlos o utilizarlos como base para nuevas herramientas educativas.
 
 ## 🎯 Áreas Cubiertas
 
@@ -41,34 +45,6 @@ Una colección completa de aplicaciones interactivas en Python diseñadas para v
 1. **Estimadores puntuales**
 2. **Intervalos de confianza**
 3. **Estimación por máxima verosimilitud**
-
-## 🚀 Proyectos Actualmente Disponibles
-
-### Técnicas Para El Conteo de Eventos
-- **`Factorial De Un Número.py`**
-- **`Principio Fundamental Del Conteo.py`**
-- **`Conteo De Ordenaciones De Eventos.py`**
-- **`Conteo De Permutaciones De Eventos.py`**
-- **`Conteo De Combinaciones De Eventos.py`**
-- **`Diagramas De Venn.py`**
-
-### Distribución Normal - Campana de Gauss
-**`distribucion_normal.py`**
-
-Una aplicación interactiva que permite visualizar la distribución normal y comprender sus propiedades fundamentales.
-
-#### Características:
-- ✅ Ajuste en tiempo real de media (μ) y desviación estándar (σ)
-- ✅ Cálculo de probabilidades entre dos valores
-- ✅ Visualización de áreas bajo la curva
-- ✅ Regla empírica (68-95-99.7)
-- ✅ Distribución normal estándar
-- ✅ Interfaz intuitiva con deslizadores y campos de entrada
-
-#### Parámetros ajustables:
-- **Media (μ)**: Controla el centro de la distribución
-- **Desviación Estándar (σ)**: Controla la dispersión de los datos
-- **Límites**: Define el rango para cálculos de probabilidad
 
 ## 🛠️ Tecnologías Utilizadas
 
