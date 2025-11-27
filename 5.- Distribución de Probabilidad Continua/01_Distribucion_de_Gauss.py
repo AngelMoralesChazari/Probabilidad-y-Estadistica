@@ -14,7 +14,10 @@ class AplicacionDistribucionNormal:
         self.raiz.title("Distribución Normal - Campana de Gauss")
 
         # Pantalla completa
-        self.raiz.state('zoomed')
+        try:
+            self.raiz.state('zoomed')
+        except Exception:
+            pass
 
         # Fuentes
         self.fuente_grande = ('Arial', 12)
@@ -29,7 +32,7 @@ class AplicacionDistribucionNormal:
         self.limite_inferior = tk.DoubleVar(value=-1)
         self.limite_superior = tk.DoubleVar(value=1)
 
-        # NUEVAS variables para intervalo entre z1 y z2
+        # Variables para intervalo entre z1 y z2
         self.usar_intervalo_z = tk.BooleanVar(value=False)
         self.z1 = tk.DoubleVar(value=-1.0)
         self.z2 = tk.DoubleVar(value=1.0)
@@ -66,8 +69,8 @@ class AplicacionDistribucionNormal:
         ttk.Label(frame_media, text="Media (μ):").pack(side=tk.LEFT, padx=(0, 15))
         self.deslizador_media = ttk.Scale(
             frame_media,
-            from_=-5,
-            to=5,
+            from_=-50,
+            to=50,
             variable=self.media,
             orient=tk.HORIZONTAL,
             command=self.actualizar_desde_deslizador,
@@ -87,7 +90,7 @@ class AplicacionDistribucionNormal:
         self.deslizador_desviacion = ttk.Scale(
             frame_desviacion,
             from_=0.1,
-            to=3,
+            to=50,
             variable=self.desviacion,
             orient=tk.HORIZONTAL,
             command=self.actualizar_desde_deslizador,
@@ -105,7 +108,7 @@ class AplicacionDistribucionNormal:
         )
         marco_probabilidad.pack(fill=tk.X, pady=(0, 15))
 
-        # Fila 1: rango (limite inferior / superior)
+        # Fila 1: rango (límite inferior / superior)
         frame_rango = ttk.Frame(marco_probabilidad)
         frame_rango.pack(fill=tk.X, pady=10)
 
@@ -127,21 +130,21 @@ class AplicacionDistribucionNormal:
             command=self.calcular_probabilidad_rango
         ).pack(side=tk.LEFT, padx=(20, 0))
 
-        # Fila 2: probabilidad acumulada P(X ≤ z)
+        # Fila 2: probabilidad acumulada P(X ≤ x)
         frame_acumulada = ttk.Frame(marco_probabilidad)
         frame_acumulada.pack(fill=tk.X, pady=10)
 
-        ttk.Label(frame_acumulada, text="Valor a la izquierda de Z:").pack(side=tk.LEFT, padx=(0, 10))
+        ttk.Label(frame_acumulada, text="Valor X (para P(X ≤ x)):").pack(side=tk.LEFT, padx=(0, 10))
         self.valor_z = ttk.Entry(frame_acumulada, width=12, font=self.fuente_mediana)
         self.valor_z.pack(side=tk.LEFT, padx=(0, 30))
 
         ttk.Button(
             frame_acumulada,
-            text="PROBABILIDAD ACUMULADA (P(X ≤ z))",
+            text="PROBABILIDAD ACUMULADA (P(X ≤ x))",
             command=self.calcular_probabilidad_acumulada
         ).pack(side=tk.LEFT, padx=(0, 10))
 
-        # Fila 3 (NUEVA): intervalo entre z1 y z2
+        # Fila 3: intervalo entre z1 y z2 (opcional)
         frame_intervalo = ttk.Frame(marco_probabilidad)
         frame_intervalo.pack(fill=tk.X, pady=10)
 
@@ -227,46 +230,68 @@ class AplicacionDistribucionNormal:
         # Actualización en tiempo real
         self.configurar_eventos_entrada()
 
+    # ----------------- Helpers y eventos -----------------
+    def safe_get(self, var, default=None):
+        """Leer de forma segura una tk.Variable o Entry vinculada.
+           Devuelve default si el campo está vacío o no es numérico."""
+        # var puede ser una tk.Variable
+        try:
+            raw = var.get()
+        except Exception:
+            return default
+        try:
+            return float(raw)
+        except (ValueError, TypeError):
+            return default
+
     def configurar_eventos_entrada(self):
-        """Eventos para las entradas de texto"""
+        """Eventos para las entradas de texto (no intentan convertir si está vacío)."""
         entradas = [
             (self.entrada_media, self.media),
             (self.entrada_desviacion, self.desviacion),
             (self.entrada_lim_inf, self.limite_inferior),
             (self.entrada_lim_sup, self.limite_superior),
+            (self.entrada_z1, self.z1),
+            (self.entrada_z2, self.z2),
         ]
 
         for entrada, variable in entradas:
-            entrada.bind(
-                '<KeyRelease>',
-                lambda e, v=variable: self.actualizar_desde_entrada(v)
-            )
+            entrada.bind('<KeyRelease>', lambda e, v=variable: self.actualizar_desde_entrada(v))
 
     def actualizar_desde_deslizador(self, event=None):
         """Actualizar la gráfica cuando se mueven los deslizadores"""
         self.actualizar_grafica()
 
     def actualizar_desde_entrada(self, variable):
-        """Actualizar la gráfica cuando se escriben valores"""
-        try:
-            float(variable.get())
-            if hasattr(self, '_after_id'):
+        """Actualizar la gráfica cuando se escriben valores (seguro contra entradas vacías)."""
+        val = self.safe_get(variable, default=None)
+        if val is None:
+            return
+        if hasattr(self, '_after_id'):
+            try:
                 self.raiz.after_cancel(self._after_id)
-            self._after_id = self.raiz.after(500, self.actualizar_grafica)
-        except ValueError:
-            pass  # Ignorar mientras el valor no sea numérico completo
+            except Exception:
+                pass
+        self._after_id = self.raiz.after(300, self.actualizar_grafica)
 
+    # ----------------- Gráfica -----------------
     def actualizar_grafica(self):
         """Actualizar la gráfica de la distribución normal"""
         try:
             self.eje.clear()
 
-            media = self.media.get()
-            desviacion = self.desviacion.get()
+            media = self.safe_get(self.media)
+            desviacion = self.safe_get(self.desviacion)
+
+            if media is None or desviacion is None or desviacion <= 0:
+                # Mostrar mensaje en el plot
+                self.eje.text(0.5, 0.5, "Introduzca μ y σ válidos", ha='center', transform=self.eje.transAxes)
+                self.canvas.draw()
+                return
 
             # Generar puntos para la curva
             x = np.linspace(media - 4 * desviacion, media + 4 * desviacion, 1000)
-            y = norm.pdf(x, media, desviacion)
+            y = norm.pdf(x, loc=media, scale=desviacion)
 
             # Curva principal
             self.eje.plot(
@@ -275,27 +300,25 @@ class AplicacionDistribucionNormal:
             )
 
             # Área entre límites actuales
-            limite_inf = self.limite_inferior.get()
-            limite_sup = self.limite_superior.get()
+            limite_inf = self.safe_get(self.limite_inferior, default=None)
+            limite_sup = self.safe_get(self.limite_superior, default=None)
 
-            if limite_inf < limite_sup:
+            if limite_inf is not None and limite_sup is not None and limite_inf < limite_sup:
                 mascara = (x >= limite_inf) & (x <= limite_sup)
-                self.eje.fill_between(
-                    x[mascara], y[mascara],
-                    alpha=0.4, color='red',
-                    label=f'Área: {limite_inf:.2f} a {limite_sup:.2f}'
-                )
+                if np.any(mascara):
+                    self.eje.fill_between(
+                        x[mascara], y[mascara],
+                        alpha=0.4, color='red',
+                        label=f'Área: {limite_inf:.2f} a {limite_sup:.2f}'
+                    )
 
-                prob = norm.cdf(limite_sup, media, desviacion) - norm.cdf(
-                    limite_inf, media, desviacion
-                )
+                prob = norm.cdf(limite_sup, loc=media, scale=desviacion) - norm.cdf(limite_inf, loc=media, scale=desviacion)
                 self.eje.text(
                     0.02, 0.83,
                     f'P = {prob:.4f}\n({prob*100:.2f}%)',
                     transform=self.eje.transAxes,
                     fontsize=12,
-                    bbox=dict(boxstyle="round,pad=0.3",
-                              facecolor="yellow", alpha=0.7)
+                    bbox=dict(boxstyle="round,pad=0.3", facecolor="yellow", alpha=0.8)
                 )
 
             # Etiquetas
@@ -315,112 +338,134 @@ class AplicacionDistribucionNormal:
         except Exception as e:
             print(f"Error al actualizar gráfica: {e}")
 
+    # ----------------- Cálculos de probabilidad (con estandarización mostrada) -----------------
     def calcular_probabilidad_rango(self):
-        """Calcular la probabilidad entre dos valores"""
-        try:
-            media = self.media.get()
-            desviacion = self.desviacion.get()
-            limite_inf = self.limite_inferior.get()
-            limite_sup = self.limite_superior.get()
+        """Calcular la probabilidad entre dos valores y mostrar z-scores y Φ(z)."""
+        media = self.safe_get(self.media)
+        desviacion = self.safe_get(self.desviacion)
+        limite_inf = self.safe_get(self.limite_inferior)
+        limite_sup = self.safe_get(self.limite_superior)
 
-            if limite_inf >= limite_sup:
-                messagebox.showerror(
-                    "Error",
-                    "El límite inferior debe ser menor al límite superior"
-                )
-                return
+        if None in (media, desviacion, limite_inf, limite_sup):
+            messagebox.showerror("Error", "Por favor ingrese todos los valores numéricos.")
+            return
 
-            prob = norm.cdf(limite_sup, media, desviacion) - norm.cdf(
-                limite_inf, media, desviacion
-            )
+        if desviacion <= 0:
+            messagebox.showerror("Error", "La desviación estándar debe ser mayor que 0.")
+            return
 
-            messagebox.showinfo(
-                "Resultado",
-                f"P({limite_inf:.4f} ≤ X ≤ {limite_sup:.4f}) = {prob:.6f}\n"
-                f"({prob*100:.4f}% del área total)"
-            )
+        if limite_inf >= limite_sup:
+            messagebox.showerror("Error", "El límite inferior debe ser menor al límite superior.")
+            return
 
-            self.actualizar_grafica()
+        # Estandarización
+        z1 = (limite_inf - media) / desviacion
+        z2 = (limite_sup - media) / desviacion
+        phi_z1 = norm.cdf(z1)
+        phi_z2 = norm.cdf(z2)
+        prob = phi_z2 - phi_z1
 
-        except ValueError:
-            messagebox.showerror(
-                "Error",
-                "Por favor ingrese valores numéricos válidos"
-            )
+        texto = (
+            f"PARÁMETROS:\n"
+            f"  μ = {media:.4f}, σ = {desviacion:.4f}\n\n"
+            f"INTERVALO: {limite_inf:.4f} ≤ X ≤ {limite_sup:.4f}\n\n"
+            f"Estandarización:\n"
+            f"  z1 = (a - μ)/σ = ({limite_inf:.4f} - {media:.4f}) / {desviacion:.4f} = {z1:.4f}\n"
+            f"  z2 = (b - μ)/σ = ({limite_sup:.4f} - {media:.4f}) / {desviacion:.4f} = {z2:.4f}\n\n"
+            f"Valores de la CDF estándar:\n"
+            f"  Φ(z1) = Φ({z1:.4f}) = {phi_z1:.6f}\n"
+            f"  Φ(z2) = Φ({z2:.4f}) = {phi_z2:.6f}\n\n"
+            f"Probabilidad:\n"
+            f"  P({limite_inf:.4f} ≤ X ≤ {limite_sup:.4f}) = Φ(z2) - Φ(z1) = {phi_z2:.6f} - {phi_z1:.6f} = {prob:.6f}\n"
+            f"  → {prob*100:.4f}%"
+        )
+
+        messagebox.showinfo("Resultado (con estandarización)", texto)
+
+        # Actualizar límites para mostrar el área sombreada en la gráfica
+        self.limite_inferior.set(limite_inf)
+        self.limite_superior.set(limite_sup)
+        self.actualizar_grafica()
 
     def calcular_probabilidad_acumulada(self):
-        """Calcular la probabilidad acumulada hasta un valor z"""
+        """Calcular P(X ≤ x) mostrando el z estandarizado y Φ(z)."""
+        texto = self.valor_z.get().strip()
+        if not texto:
+            messagebox.showerror("Error", "Por favor ingrese un valor X")
+            return
         try:
-            texto = self.valor_z.get().strip()
-            if not texto:
-                messagebox.showerror("Error", "Por favor ingrese un valor z")
-                return
-
-            z = float(texto)
-            media = self.media.get()
-            desviacion = self.desviacion.get()
-
-            prob = norm.cdf(z, media, desviacion)
-
-            messagebox.showinfo(
-                "Resultado",
-                f"P(X ≤ {z:.4f}) = {prob:.6f}\n"
-                f"({prob*100:.4f}% de los valores son ≤ {z:.4f})"
-            )
-
-            # Actualizar límites para mostrar esta área
-            self.limite_inferior.set(media - 4 * desviacion)
-            self.limite_superior.set(z)
-            self.actualizar_grafica()
-
+            x_val = float(texto)
         except ValueError:
-            messagebox.showerror(
-                "Error",
-                "Por favor ingrese un valor z numérico válido"
-            )
+            messagebox.showerror("Error", "Ingrese un número válido para X")
+            return
+
+        media = self.safe_get(self.media)
+        desviacion = self.safe_get(self.desviacion)
+        if None in (media, desviacion) or desviacion <= 0:
+            messagebox.showerror("Error", "Ingrese μ y σ válidos")
+            return
+
+        # Estandarización del valor X
+        z = (x_val - media) / desviacion
+        phi = norm.cdf(z)
+        texto_res = (
+            f"Valor X = {x_val:.4f}\n"
+            f"Estandarizado: z = (X - μ)/σ = ({x_val:.4f} - {media:.4f})/{desviacion:.4f} = {z:.4f}\n"
+            f"Φ(z) = Φ({z:.4f}) = {phi:.6f}\n"
+            f"P(X ≤ {x_val:.4f}) = {phi:.6f}  → {phi*100:.4f}%"
+        )
+        messagebox.showinfo("Probabilidad acumulada (con z)", texto_res)
+
+        # Actualizar límites para visualizar en la grafica
+        self.limite_inferior.set(media - 4 * desviacion)
+        self.limite_superior.set(x_val)
+        self.actualizar_grafica()
 
     def calcular_probabilidad_entre_z(self):
-        """Calcular P(z1 ≤ X ≤ z2) y sombrear esa área"""
+        """Interpretamos las entradas z1,z2 como valores X (misma escala que μ)."""
         try:
             if not self.usar_intervalo_z.get():
-                messagebox.showerror(
-                    "Opción desactivada",
-                    "Marque la casilla 'Usar intervalo entre z₁ y z₂' para activar esta opción."
-                )
+                messagebox.showerror("Opción desactivada", "Marque la casilla 'Usar intervalo entre z₁ y z₂' para activar esta opción.")
                 return
 
-            z1 = float(self.entrada_z1.get().strip())
-            z2 = float(self.entrada_z2.get().strip())
-
-            if z1 >= z2:
-                messagebox.showerror(
-                    "Error",
-                    "Debe cumplirse z₁ < z₂."
-                )
+            z1_raw = self.entrada_z1.get().strip()
+            z2_raw = self.entrada_z2.get().strip()
+            if z1_raw == "" or z2_raw == "":
+                messagebox.showerror("Error", "Ingrese valores para z₁ y z₂")
                 return
 
-            media = self.media.get()
-            desviacion = self.desviacion.get()
+            z1_val = float(z1_raw)
+            z2_val = float(z2_raw)
 
-            prob = norm.cdf(z2, media, desviacion) - norm.cdf(z1, media, desviacion)
+            if z1_val >= z2_val:
+                messagebox.showerror("Error", "Debe cumplirse z₁ < z₂.")
+                return
 
-            messagebox.showinfo(
-                "Resultado",
-                f"P({z1:.4f} ≤ X ≤ {z2:.4f}) = {prob:.6f}\n"
-                f"({prob*100:.4f}% del área total)"
+            media = self.safe_get(self.media)
+            desviacion = self.safe_get(self.desviacion)
+            if None in (media, desviacion) or desviacion <= 0:
+                messagebox.showerror("Error", "Ingrese μ y σ válidos")
+                return
+
+            # cálculo equivalente al rango
+            prob = norm.cdf(z2_val, loc=media, scale=desviacion) - norm.cdf(z1_val, loc=media, scale=desviacion)
+
+            texto = (
+                f"INTERVALO: {z1_val:.4f} ≤ X ≤ {z2_val:.4f}\n\n"
+                f"P = {prob:.6f} → {prob*100:.4f}%\n\n"
+                f"(Si quieres que z₁,y z₂ sean z-estandarizados, dime y lo adapto.)"
             )
+            messagebox.showinfo("Resultado", texto)
 
-            # Actualizar límites para mostrar esa área en rojo
-            self.limite_inferior.set(z1)
-            self.limite_superior.set(z2)
+            # Visualizar
+            self.limite_inferior.set(z1_val)
+            self.limite_superior.set(z2_val)
             self.actualizar_grafica()
 
         except ValueError:
-            messagebox.showerror(
-                "Error",
-                "Por favor ingrese valores numéricos válidos para z₁ y z₂"
-            )
+            messagebox.showerror("Error", "Por favor ingrese valores numéricos válidos para z₁ y z₂")
 
+    # ----------------- Acciones rápidas -----------------
     def establecer_estandar(self):
         """Establecer la distribución normal estándar"""
         self.media.set(0)
@@ -435,15 +480,17 @@ class AplicacionDistribucionNormal:
 
     def area_una_desviacion(self):
         """Mostrar el área dentro de una desviación estándar"""
-        media = self.media.get()
-        desviacion = self.desviacion.get()
+        media = self.safe_get(self.media)
+        desviacion = self.safe_get(self.desviacion)
+        if media is None or desviacion is None:
+            messagebox.showerror("Error", "Ingrese μ y σ válidos")
+            return
+
         self.limite_inferior.set(media - desviacion)
         self.limite_superior.set(media + desviacion)
         self.actualizar_grafica()
 
-        prob = norm.cdf(media + desviacion, media, desviacion) - norm.cdf(
-            media - desviacion, media, desviacion
-        )
+        prob = norm.cdf(media + desviacion, media, desviacion) - norm.cdf(media - desviacion, media, desviacion)
         messagebox.showinfo(
             "Regla Empírica",
             f"Área dentro de μ±σ: {prob:.6f}\n"
@@ -453,15 +500,17 @@ class AplicacionDistribucionNormal:
 
     def area_dos_desviaciones(self):
         """Mostrar el área dentro de dos desviaciones estándar"""
-        media = self.media.get()
-        desviacion = self.desviacion.get()
+        media = self.safe_get(self.media)
+        desviacion = self.safe_get(self.desviacion)
+        if media is None or desviacion is None:
+            messagebox.showerror("Error", "Ingrese μ y σ válidos")
+            return
+
         self.limite_inferior.set(media - 2 * desviacion)
         self.limite_superior.set(media + 2 * desviacion)
         self.actualizar_grafica()
 
-        prob = norm.cdf(media + 2 * desviacion, media, desviacion) - norm.cdf(
-            media - 2 * desviacion, media, desviacion
-        )
+        prob = norm.cdf(media + 2 * desviacion, media, desviacion) - norm.cdf(media - 2 * desviacion, media, desviacion)
         messagebox.showinfo(
             "Regla Empírica",
             f"Área dentro de μ±2σ: {prob:.6f}\n"
